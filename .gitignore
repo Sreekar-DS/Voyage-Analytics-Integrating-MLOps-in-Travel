@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# IDE and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Test and cache artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+
+# MLflow local state
+mlruns/
+mlartifacts/
+*.db
+
+# Airflow local state
+airflow.db
+airflow-webserver.pid
+logs/
+
+# Generated model artifacts
+models/*.joblib
+models/*.pkl
+models/*.pickle
+
+# Local deployment files
+*.log
+
+# Large/raw data should be added intentionally
+# data/raw/*.csv
