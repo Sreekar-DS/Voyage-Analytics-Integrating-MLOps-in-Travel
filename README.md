@@ -1,16 +1,41 @@
 # Voyage Analytics: Integrating MLOps in Travel
 
-An end-to-end travel analytics and MLOps capstone built from three linked datasets covering users, flights, and hotels.
+[![Voyage Analytics CI](https://github.com/Sreekar-DS/Voyage-Analytics-Integrating-MLOps-in-Travel/actions/workflows/ci.yml/badge.svg)](https://github.com/Sreekar-DS/Voyage-Analytics-Integrating-MLOps-in-Travel/actions/workflows/ci.yml)
+
+An end-to-end travel analytics and MLOps capstone built from linked user, flight, and hotel datasets.
+
+## Live Application
+
+The repository now contains a deployment-ready multipage Streamlit portfolio app with:
+
+- **Flight Price Prediction**
+- **Hotel Recommendation**
+- **Profile Classification Demonstration**
+- **Project and MLOps Overview**
+
+**Deployment coordinates**
+
+| Setting | Value |
+|---|---|
+| Repository | `Sreekar-DS/Voyage-Analytics-Integrating-MLOps-in-Travel` |
+| Branch | `main` |
+| Entrypoint | `streamlit_app/app.py` |
+| Python | `3.12` |
+| Suggested subdomain | `voyage-analytics-tarun` |
+
+> The final public `streamlit.app` URL will be inserted here after the one-time Streamlit Community Cloud authorization and deployment step.
+
+See [`docs/STREAMLIT_DEPLOYMENT.md`](docs/STREAMLIT_DEPLOYMENT.md) for the exact deployment fields.
 
 ## Project Overview
 
 The project solves three travel-related machine-learning problems and connects the primary regression model to a full MLOps lifecycle:
 
 1. **Flight Price Regression** — predicts flight prices from route, flight type, agency, distance, duration, and engineered calendar features.
-2. **Gender Classification** — predicts known binary labels from user names and supporting profile features while treating the raw `none` target values as unavailable labels.
+2. **Profile Classification** — demonstrates text-and-tabular classification from names and supporting profile features while treating raw `none` targets as unavailable labels.
 3. **Hotel Recommendation** — ranks hotels from historical booking frequency with a popularity fallback for cold-start users.
 
-The **flight price regression model** is the main model used to demonstrate serving, containerization, scaling, scheduling, CI/CD, and experiment tracking.
+The flight-price regression model is the main model used to demonstrate serving, containerization, scaling, scheduling, CI/CD, and experiment tracking.
 
 ## Dataset Summary
 
@@ -34,11 +59,11 @@ A leakage-aware `GroupShuffleSplit` is performed by `travelCode` so paired recor
 | Decision Tree | ~0.0044 | ~0.5298 | ~0.999998 |
 | Random Forest | ~0.0047 | ~0.1562 | ~0.9999998 |
 
-The very high tree-based scores must be interpreted in the context of this dataset: each exact origin, destination, flight type, and agency combination effectively has a fixed fare. The result demonstrates strong performance for the supplied pricing structure, not guaranteed generalization to unseen dynamic-market pricing regimes.
+The high tree-based scores reflect the supplied dataset's nearly fixed fare for each exact origin, destination, flight type, and agency combination. The result does not imply guaranteed generalization to unseen dynamic airline pricing.
 
-### Gender Classification
+### Profile Classification
 
-The raw target contains `male`, `female`, and `none`. The `none` value is treated as unavailable target information. Supervised modeling uses the 900 known male/female records.
+The raw target contains `male`, `female`, and `none`. The `none` value is treated as unavailable target information. Supervised modeling uses 900 known-label records.
 
 | Model | Accuracy | Weighted F1 |
 |---|---:|---:|
@@ -46,7 +71,7 @@ The raw target contains `male`, `female`, and `none`. The `none` value is treate
 | Linear SVM | ~0.828 | ~0.827 |
 | SGD Classifier | ~0.833 | ~0.833 |
 
-The classification component is a technical project requirement and should not be used to override self-described identity or for high-stakes decisions.
+This component is a technical demonstration based on historical labels. Its output is not verified identity information and must not be used for high-stakes decisions.
 
 ### Hotel Recommendation
 
@@ -58,7 +83,7 @@ Evaluation uses a temporal holdout: each eligible user's latest booking is held 
 | Personalized Frequency | ~0.391 | ~0.236 |
 | Tested Hybrid | ~0.366 | ~0.227 |
 
-The simple personalized-frequency recommender is selected because the catalogue contains only nine hotels and user histories are dense.
+The personalized-frequency strategy is selected because the catalogue contains nine hotels and user histories are dense.
 
 ## MLOps Architecture
 
@@ -71,112 +96,92 @@ Users / Flights / Hotels CSV
    +--------+--------+
    |        |        |
    v        v        v
-Regression  Gender   Hotel
- Model      Model    Recommender
+Regression  Profile  Hotel
+ Model       Model   Recommender
    |          |         |
    +----------+---------+
               |
-         Flask REST API
-              |
-            Docker
-              |
-          Kubernetes
-        /      |       \
-   Airflow   Jenkins   MLflow
-              |
-        Streamlit App
+         Saved Artifacts
+        /              \
+ Flask REST API     Streamlit App
+        |
+      Docker
+        |
+    Kubernetes
+   /     |      \
+Airflow Jenkins  MLflow
 ```
 
 ## Implemented Components
 
-- **Reusable training code** for regression, classification, and recommendation
-- **Flask REST API** with health, regression, classification, and recommendation endpoints
-- **Streamlit dashboard** for personalized hotel recommendations and travel-history insights
-- **Dockerfile** for the Flask API
-- **Kubernetes Deployment** with three initial replicas
-- **Kubernetes Service** for API exposure
-- **Horizontal Pod Autoscaler** for CPU-based scaling
-- **Apache Airflow DAG** for data validation, model training, artifact validation, and MLflow tracking
-- **Jenkins declarative CI/CD pipeline** for validation, testing, Docker build, smoke test, optional registry push, and optional Kubernetes deployment
-- **MLflow experiment script** comparing the three regression models
-- **Pytest API tests**
+- Reusable regression, classification, and recommendation training modules
+- Flask REST API with health and inference endpoints
+- Multipage Streamlit portfolio application
+- MLflow experiment tracking with persistent SQLite storage
+- Dockerfile for the Flask API
+- Kubernetes Deployment, Service, and Horizontal Pod Autoscaler
+- Apache Airflow regression workflow
+- Jenkins declarative CI/CD pipeline
+- GitHub Actions Python-test and Docker-build workflow
+- Pytest Flask API tests
+- Three AlmaBetter-format modeling notebooks
 
 ## Repository Structure
 
 ```text
 .
-├── notebooks/                 # Three AlmaBetter-format modeling notebooks
-├── data/
-│   └── README.md              # Dataset guidance
+├── .github/workflows/ci.yml
+├── .streamlit/config.toml
+├── notebooks/
+├── data/raw/
+├── models/
 ├── src/
-│   ├── regression/
-│   │   └── train.py
-│   ├── classification/
-│   │   └── train.py
-│   └── recommendation/
-│       └── train.py
-├── models/                    # Saved Joblib artifacts
-├── api/
-│   └── app.py
+│   ├── regression/train.py
+│   ├── classification/train.py
+│   └── recommendation/train.py
+├── api/app.py
 ├── streamlit_app/
-│   └── app.py
+│   ├── app.py
+│   ├── common.py
+│   ├── requirements.txt
+│   └── pages/
+│       ├── 1_Flight_Price_Prediction.py
+│       ├── 2_Hotel_Recommendation.py
+│       └── 3_Gender_Classification.py
+├── mlflow_tracking/train_with_mlflow.py
+├── airflow/dags/regression_pipeline_dag.py
 ├── kubernetes/
-│   ├── deployment.yml
-│   ├── service.yml
-│   └── hpa.yml
-├── airflow/
-│   └── dags/
-│       └── regression_pipeline_dag.py
-├── mlflow_tracking/
-│   └── train_with_mlflow.py
-├── tests/
-│   └── test_api.py
-├── docs/
-│   └── PROJECT_PLAN.md
+├── tests/test_api.py
 ├── Dockerfile
 ├── Jenkinsfile
 ├── requirements.txt
 └── README.md
 ```
 
-## Model Training
-
-Place the raw datasets under `data/raw/` and run:
+## Run the Streamlit App
 
 ```bash
-python src/regression/train.py \
-  --data data/raw/flights.csv \
-  --model-out models/flight_price_model.joblib
-
-python src/classification/train.py \
-  --data data/raw/users.csv \
-  --model-out models/gender_classifier.joblib
-
-python src/recommendation/train.py \
-  --data data/raw/hotels.csv \
-  --model-out models/hotel_recommender.joblib
+python -m streamlit run streamlit_app/app.py
 ```
 
-## Flask REST API
+The public Streamlit app loads the same three Joblib artifacts used by the Flask API. Flight inputs are constrained to route and service combinations observed in `flights.csv`.
 
-Run the API after the model artifacts exist:
+## Flask REST API
 
 ```bash
 python api/app.py
 ```
 
-### Health
+Endpoints:
 
-```http
-GET /health
-```
-
-### Flight Price Prediction
-
-```http
+```text
+GET  /health
 POST /predict/flight-price
-Content-Type: application/json
+POST /predict/gender
+POST /recommend/hotels
 ```
+
+Example flight request:
 
 ```json
 {
@@ -190,42 +195,15 @@ Content-Type: application/json
 }
 ```
 
-### Gender Classification
-
-```http
-POST /predict/gender
-Content-Type: application/json
-```
-
-```json
-{
-  "name": "Ana Silva",
-  "company": "Acme",
-  "age": 30
-}
-```
-
-### Hotel Recommendations
-
-```http
-POST /recommend/hotels
-Content-Type: application/json
-```
-
-```json
-{
-  "userCode": 1,
-  "top_k": 3
-}
-```
-
-## Streamlit Application
+## MLflow Tracking
 
 ```bash
-streamlit run streamlit_app/app.py
+$env:MLFLOW_TRACKING_URI = "sqlite:///mlflow.db"
+python mlflow_tracking/train_with_mlflow.py --data data/raw/flights.csv
+python -m mlflow server --backend-store-uri sqlite:///mlflow.db --host 127.0.0.1 --port 5001 --workers 1
 ```
 
-The dashboard displays recommendation cards, booking-history KPIs, hotel frequency, destination preferences, and a cold-start explanation when the selected user has no training history.
+The experiment compares Linear Regression, Decision Tree, and Random Forest and logs parameters, MAE, RMSE, R², dataset metadata, and model artifacts.
 
 ## Docker
 
@@ -234,19 +212,15 @@ docker build -t voyage-analytics-api .
 docker run --rm -p 5000:5000 voyage-analytics-api
 ```
 
-The container exposes the Flask API on port `5000` and includes a `/health` health check.
-
 ## Kubernetes
 
-Before deployment, replace `YOUR_DOCKERHUB_USERNAME` in `kubernetes/deployment.yml` with the registry account used to publish the Docker image.
+Replace `YOUR_DOCKERHUB_USERNAME` in `kubernetes/deployment.yml`, then apply:
 
 ```bash
 kubectl apply -f kubernetes/deployment.yml
 kubectl apply -f kubernetes/service.yml
 kubectl apply -f kubernetes/hpa.yml
 ```
-
-The deployment starts with three replicas. The HPA is configured to scale between two and eight replicas using CPU utilization.
 
 ## Apache Airflow
 
@@ -259,16 +233,9 @@ validate_data
     -> track_experiments
 ```
 
-The project root and flights CSV path can be configured through:
-
-- `VOYAGE_PROJECT_ROOT`
-- `VOYAGE_FLIGHTS_CSV`
-- `VOYAGE_FLIGHT_MODEL`
-- `MLFLOW_TRACKING_URI`
-
 ## Jenkins CI/CD
 
-The `Jenkinsfile` contains the following stages:
+The `Jenkinsfile` performs:
 
 ```text
 Checkout
@@ -281,38 +248,36 @@ Checkout
   -> Optional Kubernetes Deployment
 ```
 
-Docker registry publishing uses a Jenkins credential with the ID `dockerhub-credentials`. Registry push and Kubernetes deployment are controlled by build parameters.
+## GitHub Actions
 
-## MLflow Tracking
+The custom workflow runs automatically on pushes and pull requests:
 
-Run:
-
-```bash
-python mlflow_tracking/train_with_mlflow.py --data data/raw/flights.csv
+```text
+Python dependency installation
+  -> Python compilation
+  -> Model artifact validation
+  -> Pytest API tests
+  -> Docker image build validation
 ```
 
-The script creates separate runs for Linear Regression, Decision Tree, and Random Forest, logging model parameters, MAE, RMSE, R², dataset metadata, and model artifacts.
+For this public repository, the workflow uses standard GitHub-hosted runners.
 
 ## Development Status
 
-- [x] Repository initialized
-- [x] Dataset and submission-template audit
-- [x] Flight price regression notebook prepared
-- [x] Gender classification notebook prepared
-- [x] Hotel recommendation notebook prepared
-- [x] Reusable model training code
-- [x] Flask API
-- [x] Streamlit recommendation app
-- [x] MLflow tracking code
+- [x] Three modeling notebooks
+- [x] Reusable training modules
+- [x] Flask API and API tests
+- [x] Multipage Streamlit portfolio app
+- [x] MLflow tracking
 - [x] Docker configuration
-- [x] Kubernetes deployment and autoscaling manifests
-- [x] Airflow orchestration DAG
-- [x] Jenkins CI/CD pipeline
-- [x] API tests
-- [ ] Upload final notebook and Joblib binary artifacts to this repository
-- [ ] Run each deployment stage in the target environment and capture screenshots
-- [ ] Complete final Google Doc workflow documentation
-- [ ] Record the regression MLOps presentation video
+- [x] Kubernetes manifests
+- [x] Airflow DAG
+- [x] Jenkins pipeline
+- [x] GitHub Actions CI
+- [ ] Complete one-time Streamlit Community Cloud authorization
+- [ ] Insert the final live app URL
+- [ ] Execute Docker, Kubernetes, Airflow, and Jenkins and capture evidence
+- [ ] Complete final documentation and presentation
 
 ## Author
 
