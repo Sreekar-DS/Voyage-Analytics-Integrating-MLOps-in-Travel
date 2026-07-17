@@ -1,0 +1,24 @@
+services:
+  airflow:
+    build:
+      context: ..
+      dockerfile: airflow/Dockerfile
+    container_name: voyage-airflow
+    command: standalone
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      AIRFLOW_HOME: /opt/airflow
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/voyage-project/airflow/dags
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      VOYAGE_PROJECT_ROOT: /opt/airflow/voyage-project
+      VOYAGE_FLIGHTS_CSV: /opt/airflow/voyage-project/data/raw/flights.csv
+      VOYAGE_FLIGHT_MODEL: /opt/airflow/voyage-project/models/flight_price_model.joblib
+      MLFLOW_TRACKING_URI: sqlite:////opt/airflow/voyage-project/mlflow.db
+    volumes:
+      - ..:/opt/airflow/voyage-project
+      - airflow-home:/opt/airflow
+
+volumes:
+  airflow-home:
