@@ -7,14 +7,15 @@ pipeline {
     }
 
     parameters {
-        string(name: 'DOCKERHUB_USERNAME', defaultValue: 'YOUR_DOCKERHUB_USERNAME', description: 'Docker Hub username')
+        string(name: 'DOCKERHUB_USERNAME', defaultValue: 'sreekards', description: 'Docker Hub username')
         booleanParam(name: 'PUSH_IMAGE', defaultValue: false, description: 'Push the Docker image to Docker Hub')
-        booleanParam(name: 'DEPLOY_K8S', defaultValue: false, description: 'Apply Kubernetes manifests after a successful image push')
+        booleanParam(name: 'DEPLOY_K8S', defaultValue: false, description: 'Deploy the pushed build-number image to Docker Desktop Kubernetes')
     }
 
     environment {
         IMAGE_NAME = 'voyage-analytics-api'
         IMAGE_TAG = "${BUILD_NUMBER}"
+        SMOKE_CONTAINER = 'voyage-api-smoke'
     }
 
     stages {
@@ -28,7 +29,7 @@ pipeline {
             steps {
                 sh '''
                     python --version
-                    python -m compileall api src mlflow_tracking airflow/dags streamlit_app
+                    python -m compileall -q api src mlflow_tracking airflow/dags streamlit_app tests
                 '''
             }
         }
@@ -36,10 +37,11 @@ pipeline {
         stage('Install Test Dependencies') {
             steps {
                 sh '''
+                    rm -rf .venv
                     python -m venv .venv
                     . .venv/bin/activate
                     python -m pip install --upgrade pip
-                    pip install -r requirements.txt
+                    python -m pip install -r requirements.txt
                 '''
             }
         }
@@ -48,7 +50,7 @@ pipeline {
             steps {
                 sh '''
                     . .venv/bin/activate
-                    pytest -q tests
+                    python -m pytest -q tests
                 '''
             }
         }
@@ -65,11 +67,24 @@ pipeline {
         stage('Container Smoke Test') {
             steps {
                 sh '''
-                    docker rm -f voyage-api-smoke >/dev/null 2>&1 || true
-                    docker run -d --name voyage-api-smoke -p 5050:5000 ${DOCKERHUB_USERNAME}/${IMAGE_NAME}:${IMAGE_TAG}
-                    sleep 8
-                    curl --fail http://127.0.0.1:5050/health
-                    docker rm -f voyage-api-smoke
+                    docker rm -f ${SMOKE_CONTAINER} >/dev/null 2>&1 || true
+                    JENKINS_NETWORK=$(docker inspect -f '{{range $name, $_ := .NetworkSettings.Networks}}{{$name}}{{end}}' "$(hostname)")
+                    docker run -d \
+                        --name ${SMOKE_CONTAINER} \
+                        --network "$JENKINS_NETWORK" \
+                        ${DOCKERHUB_USERNAME}/${IMAGE_NAME}:${IMAGE_TAG}
+
+                    for attempt in $(seq 1 30); do
+                        if curl --fail --silent --show-error http://${SMOKE_CONTAINER}:5000/health; then
+                            docker rm -f ${SMOKE_CONTAINER}
+                            exit 0
+                        fi
+                        sleep 2
+                    done
+
+                    docker logs ${SMOKE_CONTAINER}
+                    docker rm -f ${SMOKE_CONTAINER}
+                    exit 1
                 '''
             }
         }
@@ -103,10 +118,14 @@ pipeline {
             }
             steps {
                 sh '''
-                    sed "s#YOUR_DOCKERHUB_USERNAME#${DOCKERHUB_USERNAME}#g" kubernetes/deployment.yml | kubectl apply -f -
+                    kubectl get nodes
+                    kubectl apply -f kubernetes/deployment.yml
+                    kubectl set image deployment/voyage-analytics-api \
+                        voyage-analytics-api=${DOCKERHUB_USERNAME}/${IMAGE_NAME}:${IMAGE_TAG}
                     kubectl apply -f kubernetes/service.yml
                     kubectl apply -f kubernetes/hpa.yml
                     kubectl rollout status deployment/voyage-analytics-api --timeout=180s
+                    kubectl get pods
                 '''
             }
         }
