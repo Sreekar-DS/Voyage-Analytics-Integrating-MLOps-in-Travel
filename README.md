@@ -1,12 +1,15 @@
 # Voyage Analytics: Integrating MLOps in Travel
 
 [![Voyage Analytics CI](https://github.com/Sreekar-DS/Voyage-Analytics-Integrating-MLOps-in-Travel/actions/workflows/ci.yml/badge.svg)](https://github.com/Sreekar-DS/Voyage-Analytics-Integrating-MLOps-in-Travel/actions/workflows/ci.yml)
+[![Open Live App](https://img.shields.io/badge/Live%20Demo-Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://voyage-analytics-tarun.streamlit.app/)
 
 An end-to-end travel analytics and MLOps capstone built from linked user, flight, and hotel datasets.
 
 ## Live Application
 
-The repository now contains a deployment-ready multipage Streamlit portfolio app with:
+**Public app:** https://voyage-analytics-tarun.streamlit.app/
+
+The deployed multipage Streamlit portfolio app includes:
 
 - **Flight Price Prediction**
 - **Hotel Recommendation**
@@ -21,11 +24,9 @@ The repository now contains a deployment-ready multipage Streamlit portfolio app
 | Branch | `main` |
 | Entrypoint | `streamlit_app/app.py` |
 | Python | `3.12` |
-| Suggested subdomain | `voyage-analytics-tarun` |
+| Subdomain | `voyage-analytics-tarun` |
 
-> The final public `streamlit.app` URL will be inserted here after the one-time Streamlit Community Cloud authorization and deployment step.
-
-See [`docs/STREAMLIT_DEPLOYMENT.md`](docs/STREAMLIT_DEPLOYMENT.md) for the exact deployment fields.
+See [`docs/STREAMLIT_DEPLOYMENT.md`](docs/STREAMLIT_DEPLOYMENT.md) for the deployment configuration.
 
 ## Project Overview
 
@@ -268,14 +269,13 @@ For this public repository, the workflow uses standard GitHub-hosted runners.
 - [x] Reusable training modules
 - [x] Flask API and API tests
 - [x] Multipage Streamlit portfolio app
+- [x] Public Streamlit Community Cloud deployment
 - [x] MLflow tracking
 - [x] Docker configuration
 - [x] Kubernetes manifests
 - [x] Airflow DAG
 - [x] Jenkins pipeline
 - [x] GitHub Actions CI
-- [ ] Complete one-time Streamlit Community Cloud authorization
-- [ ] Insert the final live app URL
 - [ ] Execute Docker, Kubernetes, Airflow, and Jenkins and capture evidence
 - [ ] Complete final documentation and presentation
 
