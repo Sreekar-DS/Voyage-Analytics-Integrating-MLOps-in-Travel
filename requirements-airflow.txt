@@ -1,6 +1,6 @@
-# Install Apache Airflow using the constraints file matching the chosen Python and Airflow versions.
-# This file lists only the project-level packages required by the DAG tasks.
+# Project-level packages required by the Airflow DAG tasks.
+# Apache Airflow itself is supplied by airflow/Dockerfile.
 pandas>=2.2,<3.0
 joblib>=1.4,<2.0
-scikit-learn>=1.6,<2.0
+scikit-learn==1.8.0
 mlflow>=3.0,<4.0
