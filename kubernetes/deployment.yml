@@ -22,8 +22,8 @@ spec:
     spec:
       containers:
         - name: voyage-analytics-api
-          image: YOUR_DOCKERHUB_USERNAME/voyage-analytics-api:latest
-          imagePullPolicy: IfNotPresent
+          image: sreekards/voyage-analytics-api:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 5000
               name: http
