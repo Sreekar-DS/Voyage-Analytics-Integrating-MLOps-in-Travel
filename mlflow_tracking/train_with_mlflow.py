@@ -118,10 +118,14 @@ def build_experiments():
     ]
 
 
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_MLFLOW_DB = PROJECT_ROOT / "mlflow.db"
+
 def run_experiments(data_path: Path, experiment_name: str):
-    tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
-    if tracking_uri:
-        mlflow.set_tracking_uri(tracking_uri)
+    default_tracking_uri = f"sqlite:///{DEFAULT_MLFLOW_DB.as_posix()}"
+    tracking_uri = os.getenv("MLFLOW_TRACKING_URI", default_tracking_uri)
+    mlflow.set_tracking_uri(tracking_uri)
+    
 
     mlflow.set_experiment(experiment_name)
     X_train, X_test, y_train, y_test, raw_df = load_features(data_path)
