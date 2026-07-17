@@ -1,0 +1,1 @@
+"""Hotel recommendation page."""
